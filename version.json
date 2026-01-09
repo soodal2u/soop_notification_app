@@ -1,7 +1,7 @@
 {
-    "version": "1.1.0",
-    "buildNumber": 2,
-    "downloadUrl": "https://github.com/soodal2u/soop_notification_app/releases/download/v1.1.0/app-release.apk",
-    "releaseNotes": "설정 페이지, 알림 설정, 테마 변경, 방송인 순서 변경 기능 추가",
+    "version": "1.1.1",
+    "buildNumber": 3,
+    "downloadUrl": "https://github.com/soodal2u/soop_notification_app/releases/download/v1.1.1/app-release.apk",
+    "releaseNotes": "UI 개선: 방송인 추가 버튼 위치 좌측 상단으로 변경, 리스트 사용성 개선",
     "forceUpdate": false
 }

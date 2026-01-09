@@ -295,6 +295,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.person_add),
+          onPressed: _addStreamer,
+          tooltip: '방송인 추가',
+        ),
         title: const Text('SOOP Monitoring'),
         actions: [
           IconButton(
@@ -333,7 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icon(Icons.tv_off, size: 80, color: Colors.grey[800]),
                   const SizedBox(height: 16),
                   const Text(
-                    '등록된 방송인이 없습니다.\n우측 하단 버튼을 눌러 추가해주세요.',
+                    '등록된 방송인이 없습니다.\n좌측 상단 버튼을 눌러 추가해주세요.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey),
                   ),
@@ -360,11 +365,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addStreamer,
-        backgroundColor: const Color(0xFF00C73C),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
     );
   }
 
