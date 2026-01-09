@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:soop_notification_app/models/app_settings.dart';
+import 'package:soop_notification_app/services/update_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   final Function(ThemeMode) onThemeChanged;
@@ -121,6 +122,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             leading: const Icon(Icons.info_outline),
             title: const Text('앱 버전'),
             subtitle: Text(_appVersion),
+            trailing: TextButton(
+              onPressed: _manualCheckForUpdate,
+              child: const Text('업데이트 확인'),
+            ),
           ),
           const Divider(),
 
@@ -387,6 +392,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
         context,
       ).showSnackBar(const SnackBar(content: Text('모든 데이터가 초기화되었습니다.')));
       Navigator.pop(context, true); // 홈으로 돌아가기
+    }
+  }
+
+  Future<void> _manualCheckForUpdate() async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    final isAvailable = await UpdateService.isUpdateAvailable();
+
+    if (!mounted) return;
+
+    if (isAvailable) {
+      await UpdateService.showUpdateDialogIfNeeded(context);
+    } else {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('현재 최신 버전을 사용 중입니다.')),
+      );
     }
   }
 }
