@@ -66,6 +66,8 @@ class NotificationService {
     required String channelId,
     required int broadNo,
     String? profileImageUrl,
+    bool enableSound = true,
+    bool enableVibration = true,
   }) async {
     // Payload에 채널ID와 방송번호를 담아서 전달 (형식: channelId/broadNo)
     final String payload = '$channelId/$broadNo';
@@ -92,6 +94,8 @@ class NotificationService {
           priority: Priority.high,
           showWhen: true,
           largeIcon: largeIcon,
+          playSound: enableSound,
+          enableVibration: enableVibration,
         );
 
     final NotificationDetails details = NotificationDetails(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:soop_notification_app/models/app_settings.dart';
 import 'package:soop_notification_app/screens/home_screen.dart';
 import 'package:soop_notification_app/services/background_service.dart';
 import 'package:soop_notification_app/services/notification_service.dart';
@@ -7,27 +8,50 @@ import 'package:soop_notification_app/services/notification_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 알림 초기화
   await NotificationService.initialize();
-
-  // 백그라운드 서비스 초기화 (실행은 아님, 설정만)
   await BackgroundService.initializeService();
 
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.dark;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    final settings = await AppSettings.load();
+    setState(() {
+      _themeMode = settings.themeMode;
+    });
+  }
+
+  void _updateTheme(ThemeMode mode) {
+    setState(() {
+      _themeMode = mode;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'SOOP 방송 알리미',
-      themeMode: ThemeMode.dark,
+      themeMode: _themeMode,
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF121212),
-        primaryColor: const Color(0xFF00C73C), // SOOP Green style
+        primaryColor: const Color(0xFF00C73C),
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFF00C73C),
           secondary: Color(0xFF42A5F5),
@@ -45,13 +69,36 @@ class MyApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const PermissionCheckScreen(),
+      theme: ThemeData(
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: Colors.grey[100],
+        primaryColor: const Color(0xFF00C73C),
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFF00C73C),
+          secondary: Color(0xFF42A5F5),
+          surface: Colors.white,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF00C73C),
+          elevation: 0,
+          centerTitle: true,
+          titleTextStyle: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        useMaterial3: true,
+      ),
+      home: PermissionCheckScreen(onThemeChanged: _updateTheme),
     );
   }
 }
 
 class PermissionCheckScreen extends StatefulWidget {
-  const PermissionCheckScreen({super.key});
+  final Function(ThemeMode) onThemeChanged;
+
+  const PermissionCheckScreen({super.key, required this.onThemeChanged});
 
   @override
   State<PermissionCheckScreen> createState() => _PermissionCheckScreenState();
@@ -65,14 +112,14 @@ class _PermissionCheckScreenState extends State<PermissionCheckScreen> {
   }
 
   Future<void> _checkPermissions() async {
-    // 알림 권한 요청 (Android 13+)
     await Permission.notification.request();
-
-    // 필요한 경우 다른 권한 요청
 
     if (mounted) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (context) =>
+              HomeScreen(onThemeChanged: widget.onThemeChanged),
+        ),
       );
     }
   }

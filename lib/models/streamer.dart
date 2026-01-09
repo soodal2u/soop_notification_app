@@ -2,18 +2,20 @@ class Streamer {
   final String id;
   final String nickname;
   final String? profileImageUrl;
-  int? lastBroadNo; // 마지막으로 확인한 방송 번호 (방송 중이 아니면 null 또는 이전 방송 번호)
+  int? lastBroadNo;
+  bool notificationEnabled; // 알림 활성화 여부
 
   // 런타임 전용 (저장되지 않음)
   bool isBroadcasting = false;
   String? broadTitle;
-  int? broadNo; // 현재 방송 번호 (런타임)
+  int? broadNo;
 
   Streamer({
     required this.id,
     required this.nickname,
     this.profileImageUrl,
     this.lastBroadNo,
+    this.notificationEnabled = true,
     this.isBroadcasting = false,
     this.broadTitle,
   });
@@ -25,6 +27,7 @@ class Streamer {
       nickname: json['nickname'],
       profileImageUrl: json['profileImageUrl'],
       lastBroadNo: json['lastBroadNo'],
+      notificationEnabled: json['notificationEnabled'] ?? true,
     );
   }
 
@@ -35,6 +38,7 @@ class Streamer {
       'nickname': nickname,
       'profileImageUrl': profileImageUrl,
       'lastBroadNo': lastBroadNo,
+      'notificationEnabled': notificationEnabled,
     };
   }
 }
