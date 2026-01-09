@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:soop_notification_app/models/streamer.dart';
 import 'package:soop_notification_app/services/api_service.dart';
-// import 'package:soop_notification_app/services/background_service.dart'; // 불필요한 import 제거
+import 'package:soop_notification_app/services/update_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,10 +26,20 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadStreamers();
     _checkServiceStatus();
+    _checkForUpdates();
     // 30초마다 상태 업데이트
     _statusUpdateTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       _updateBroadcastStatus();
     });
+  }
+
+  // 앱 업데이트 확인
+  Future<void> _checkForUpdates() async {
+    // 약간의 딜레이 후 업데이트 확인 (UI 로딩 후)
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      UpdateService.showUpdateDialogIfNeeded(context);
+    }
   }
 
   @override
