@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:soop_notification_app/models/streamer.dart';
 import 'package:soop_notification_app/services/api_service.dart';
 import 'package:soop_notification_app/services/update_service.dart';
+import 'package:soop_notification_app/services/battery_optimization_service.dart';
 import 'package:soop_notification_app/screens/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -31,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadStreamers();
     _checkServiceStatus();
     _checkForUpdates();
+    _checkBatteryOptimization();
     _statusUpdateTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       _updateBroadcastStatus();
     });
@@ -41,6 +43,42 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) {
       UpdateService.showUpdateDialogIfNeeded(context);
     }
+  }
+
+  Future<void> _checkBatteryOptimization() async {
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    final isDisabled = await BatteryOptimizationService.isBatteryOptimizationDisabled();
+    if (!isDisabled) {
+      _showBatteryOptimizationDialog();
+    }
+  }
+
+  void _showBatteryOptimizationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('⚡ 배터리 최적화 비활성화'),
+        content: const Text(
+          '백그라운드 서비스가 계속 작동하도록 하려면 배터리 최적화를 비활성화해야 합니다.\n\n'
+          '비활성화하지 않으면 몇 시간 후 앱이 자동으로 종료되어 알림을 받을 수 없습니다.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('나중에'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              BatteryOptimizationService.requestBatteryOptimization();
+            },
+            child: const Text('설정하기'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
