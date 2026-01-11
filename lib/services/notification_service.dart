@@ -98,6 +98,7 @@ class NotificationService {
             '방송 모니터링 서비스',
             description: '백그라운드에서 방송 상태를 확인합니다.',
             importance: Importance.low, // 덜 눈에 띄게
+            showBadge: false,
           );
       await androidPlugin?.createNotificationChannel(foregroundChannel);
     }

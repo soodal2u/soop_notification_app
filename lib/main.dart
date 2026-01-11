@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:soop_notification_app/models/app_settings.dart';
 import 'package:soop_notification_app/screens/home_screen.dart';
@@ -105,6 +106,8 @@ class PermissionCheckScreen extends StatefulWidget {
 }
 
 class _PermissionCheckScreenState extends State<PermissionCheckScreen> {
+  static const platform = MethodChannel('com.example.soop_notification_app/battery');
+
   @override
   void initState() {
     super.initState();
@@ -113,6 +116,7 @@ class _PermissionCheckScreenState extends State<PermissionCheckScreen> {
 
   Future<void> _checkPermissions() async {
     await Permission.notification.request();
+    await _requestBatteryOptimization();
 
     if (mounted) {
       Navigator.of(context).pushReplacement(
@@ -121,6 +125,14 @@ class _PermissionCheckScreenState extends State<PermissionCheckScreen> {
               HomeScreen(onThemeChanged: widget.onThemeChanged),
         ),
       );
+    }
+  }
+
+  Future<void> _requestBatteryOptimization() async {
+    try {
+      await platform.invokeMethod('requestBatteryOptimization');
+    } catch (e) {
+      print('Failed to request battery optimization: $e');
     }
   }
 
