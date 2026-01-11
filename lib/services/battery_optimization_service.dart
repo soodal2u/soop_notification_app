@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 class BatteryOptimizationService {
@@ -9,7 +10,7 @@ class BatteryOptimizationService {
       final bool result = await platform.invokeMethod('isBatteryOptimizationDisabled');
       return result;
     } on PlatformException catch (e) {
-      print("Failed to check battery optimization: '${e.message}'.");
+      debugPrint("Failed to check battery optimization: '${e.message}'.");
       return false;
     }
   }
@@ -19,7 +20,7 @@ class BatteryOptimizationService {
     try {
       await platform.invokeMethod('requestBatteryOptimization');
     } on PlatformException catch (e) {
-      print("Failed to request battery optimization: '${e.message}'.");
+      debugPrint("Failed to request battery optimization: '${e.message}'.");
     }
   }
 }
