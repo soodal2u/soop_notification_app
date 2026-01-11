@@ -16,7 +16,7 @@ class BackgroundService {
     await service.configure(
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
-        autoStart: false,
+        autoStart: true,
         isForegroundMode: true,
         notificationChannelId: 'soop_foreground_service',
         initialNotificationTitle: 'SOOP 알리미 서비스',
@@ -24,7 +24,7 @@ class BackgroundService {
         foregroundServiceNotificationId: 888,
       ),
       iosConfiguration: IosConfiguration(
-        autoStart: false,
+        autoStart: true,
         onForeground: onStart,
         onBackground: onIosBackground,
       ),
@@ -47,30 +47,42 @@ class BackgroundService {
 
     final apiService = ApiService();
 
-    // 초기 체크 주기 설정
-    int checkInterval = 30;
-
     // 최초 실행 시 설정 로드
     final initialPrefs = await SharedPreferences.getInstance();
-    checkInterval = initialPrefs.getInt('checkIntervalSeconds') ?? 30;
+    final initialInterval = initialPrefs.getInt('checkIntervalSeconds') ?? 30;
 
-    // 설정 변경 감지를 위한 타이머
-    Timer.periodic(Duration(seconds: checkInterval), (timer) async {
-      // 매번 최신 설정 로드 (사용자가 설정을 변경했을 수 있음)
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.reload();
-      final currentInterval = prefs.getInt('checkIntervalSeconds') ?? 30;
-      if (currentInterval != checkInterval) {
-        // 주기가 변경되면 타이머 재시작 필요 (서비스 재시작으로 처리)
-        checkInterval = currentInterval;
-      }
+    // 타이머 참조를 저장하기 위한 변수
+    Timer? currentTimer;
+    int lastCheckedInterval = initialInterval;
 
-      await _checkBroadcasts(apiService);
+    // 타이머 시작 함수
+    void startTimer(int intervalSeconds) {
+      currentTimer?.cancel();
+      lastCheckedInterval = intervalSeconds;
+      currentTimer = Timer.periodic(Duration(seconds: intervalSeconds), (timer) async {
+        // 매번 최신 설정 로드 (사용자가 설정을 변경했을 수 있음)
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.reload();
+        final currentInterval = prefs.getInt('checkIntervalSeconds') ?? 30;
+        
+        // 주기가 변경되었고, 아직 새 타이머로 교체하지 않았다면
+        if (currentInterval != lastCheckedInterval) {
+          // 현재 타이머를 취소하고 새 타이머 시작
+          timer.cancel();
+          startTimer(currentInterval);
+          return;
+        }
 
-      service.invoke('update', {
-        "current_date": DateTime.now().toIso8601String(),
+        await _checkBroadcasts(apiService);
+
+        service.invoke('update', {
+          "current_date": DateTime.now().toIso8601String(),
+        });
       });
-    });
+    }
+
+    // 서비스 시작 시 타이머 시작
+    startTimer(initialInterval);
   }
 
   static Future<void> _checkBroadcasts(ApiService apiService) async {

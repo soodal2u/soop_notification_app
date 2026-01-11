@@ -1,7 +1,7 @@
 {
-    "version": "1.1.4",
-    "buildNumber": 6,
-    "downloadUrl": "https://github.com/soodal2u/soop_notification_app/releases/download/v1.1.4/app-release.apk",
-    "releaseNotes": "버그 수정: 알림 ON/OFF 설정이 시간이 지나면 초기화되는 문제 해결",
+    "version": "1.1.5",
+    "buildNumber": 7,
+    "downloadUrl": "https://github.com/soodal2u/soop_notification_app/releases/download/v1.1.5/app-release.apk",
+    "releaseNotes": "버그 수정 및 백그라운드 지속 실행 기능 추가",
     "forceUpdate": false
 }
