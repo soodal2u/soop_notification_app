@@ -56,9 +56,12 @@ class BackgroundService {
 
     // 타이머 참조를 저장하기 위한 변수
     Timer? currentTimer;
+    bool isRestarting = false;
 
     // 타이머 시작 함수
     void startTimer(int intervalSeconds) {
+      if (isRestarting) return; // 이미 재시작 중이면 무시
+      
       currentTimer?.cancel();
       checkInterval = intervalSeconds;
       currentTimer = Timer.periodic(Duration(seconds: intervalSeconds), (timer) async {
@@ -66,9 +69,12 @@ class BackgroundService {
         final prefs = await SharedPreferences.getInstance();
         await prefs.reload();
         final currentInterval = prefs.getInt('checkIntervalSeconds') ?? 30;
-        if (currentInterval != checkInterval) {
+        if (currentInterval != checkInterval && !isRestarting) {
           // 주기가 변경되면 타이머 재시작
+          isRestarting = true;
+          timer.cancel();
           startTimer(currentInterval);
+          isRestarting = false;
           return;
         }
 
