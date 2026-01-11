@@ -48,6 +48,109 @@ void startTimer(int intervalSeconds) {
       return;
     }
     await _checkBroadcasts(apiService);
+```
+
+#### 개선 효과
+- 사용자가 설정을 변경하면 다음 체크 주기부터 즉시 적용됨
+- 서비스를 수동으로 재시작할 필요 없음
+- 더 나은 사용자 경험 제공
+
+### 2. 백그라운드 지속 실행 기능 추가 ⭐ 신규
+
+#### 문제 상황
+몇 시간 동안 앱을 사용하지 않으면 Android의 배터리 최적화 기능이 백그라운드 서비스를 자동으로 종료시킵니다:
+- 앱을 몇 시간 사용하지 않으면 서비스가 꺼짐
+- 앱을 다시 열면 알림 기능이 비활성화되어 있음
+- 기기를 재부팅하면 서비스가 시작되지 않음
+
+#### 원인 분석
+Android의 Doze 모드와 App Standby 기능이 배터리를 절약하기 위해 백그라운드 앱을 제한:
+- 일정 시간 후 백그라운드 작업 제한
+- 네트워크 접근 제한
+- 백그라운드 서비스 강제 종료
+
+#### 해결 방법
+
+**1. 배터리 최적화 비활성화 요청**
+
+`MainActivity.kt`에 배터리 최적화 설정 요청 기능 추가:
+```kotlin
+private fun isBatteryOptimizationDisabled(): Boolean {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        return pm.isIgnoringBatteryOptimizations(packageName)
+    }
+    return true
+}
+
+private fun requestBatteryOptimization() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val intent = Intent()
+        intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+        intent.data = Uri.parse("package:$packageName")
+        startActivity(intent)
+    }
+}
+```
+
+**2. 권한 추가**
+
+`AndroidManifest.xml`에 필요한 권한 추가:
+```xml
+<uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+```
+
+**3. 부팅 시 자동 시작**
+
+`AndroidManifest.xml`에 부트 리시버 추가:
+```xml
+<receiver
+    android:name="id.flutter.flutter_background_service.BootReceiver"
+    android:enabled="true"
+    android:exported="true">
+    <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+    </intent-filter>
+</receiver>
+```
+
+**4. 앱 실행 시 다이얼로그 표시**
+
+`HomeScreen`에서 배터리 최적화가 활성화되어 있으면 사용자에게 알림:
+```dart
+Future<void> _checkBatteryOptimization() async {
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+
+    final isDisabled = await BatteryOptimizationService.isBatteryOptimizationDisabled();
+    if (!isDisabled) {
+      _showBatteryOptimizationDialog();
+    }
+}
+```
+
+**5. 서비스 자동 시작 활성화**
+
+`BackgroundService`에서 `autoStart: true` 설정:
+```dart
+androidConfiguration: AndroidConfiguration(
+  onStart: onStart,
+  autoStart: true,  // false에서 true로 변경
+  isForegroundMode: true,
+  // ...
+)
+```
+
+#### 개선 효과
+- ✅ 배터리 최적화 비활성화로 서비스가 계속 실행됨
+- ✅ 기기 재부팅 후에도 자동으로 서비스 시작
+- ✅ 앱 실행 시 자동으로 서비스 시작
+- ✅ 몇 시간 후에도 알림이 정상적으로 작동
+- ✅ 사용자에게 배터리 최적화 설정을 명확하게 안내
+
+### 3. 버전 정보 업데이트
   });
 }
 ```
