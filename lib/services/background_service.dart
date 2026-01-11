@@ -56,25 +56,25 @@ class BackgroundService {
 
     // 타이머 참조를 저장하기 위한 변수
     Timer? currentTimer;
-    bool isRestarting = false;
+    int lastCheckedInterval = checkInterval;
 
     // 타이머 시작 함수
     void startTimer(int intervalSeconds) {
-      if (isRestarting) return; // 이미 재시작 중이면 무시
-      
       currentTimer?.cancel();
       checkInterval = intervalSeconds;
+      lastCheckedInterval = intervalSeconds;
       currentTimer = Timer.periodic(Duration(seconds: intervalSeconds), (timer) async {
         // 매번 최신 설정 로드 (사용자가 설정을 변경했을 수 있음)
         final prefs = await SharedPreferences.getInstance();
         await prefs.reload();
         final currentInterval = prefs.getInt('checkIntervalSeconds') ?? 30;
-        if (currentInterval != checkInterval && !isRestarting) {
-          // 주기가 변경되면 타이머 재시작
-          isRestarting = true;
+        
+        // 주기가 변경되었고, 아직 새 타이머로 교체하지 않았다면
+        if (currentInterval != lastCheckedInterval) {
+          print('Check interval changed from $lastCheckedInterval to $currentInterval seconds');
+          // 현재 타이머를 취소하고 새 타이머 시작
           timer.cancel();
           startTimer(currentInterval);
-          isRestarting = false;
           return;
         }
 
