@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:soop_notification_app/models/streamer.dart';
 import 'package:soop_notification_app/models/app_settings.dart';
@@ -22,6 +23,7 @@ class BackgroundService {
         initialNotificationTitle: 'SOOP 알리미 서비스',
         initialNotificationContent: '방송 상태를 모니터링 중입니다...',
         foregroundServiceNotificationId: 888,
+        autoStartOnBoot: true,
       ),
       iosConfiguration: IosConfiguration(
         autoStart: false,
@@ -66,6 +68,14 @@ class BackgroundService {
       }
 
       await _checkBroadcasts(apiService);
+
+      // 서비스 상태 업데이트 (Foreground 서비스를 유지하기 위함)
+      if (service is AndroidServiceInstance) {
+        service.setForegroundNotificationInfo(
+          title: 'SOOP 알리미 서비스',
+          content: '방송 상태를 모니터링 중입니다... (마지막 체크: ${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')})',
+        );
+      }
 
       service.invoke('update', {
         "current_date": DateTime.now().toIso8601String(),
