@@ -54,23 +54,34 @@ class BackgroundService {
     final initialPrefs = await SharedPreferences.getInstance();
     checkInterval = initialPrefs.getInt('checkIntervalSeconds') ?? 30;
 
-    // 설정 변경 감지를 위한 타이머
-    Timer.periodic(Duration(seconds: checkInterval), (timer) async {
-      // 매번 최신 설정 로드 (사용자가 설정을 변경했을 수 있음)
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.reload();
-      final currentInterval = prefs.getInt('checkIntervalSeconds') ?? 30;
-      if (currentInterval != checkInterval) {
-        // 주기가 변경되면 타이머 재시작 필요 (서비스 재시작으로 처리)
-        checkInterval = currentInterval;
-      }
+    // 타이머 참조를 저장하기 위한 변수
+    Timer? currentTimer;
 
-      await _checkBroadcasts(apiService);
+    // 타이머 시작 함수
+    void startTimer(int intervalSeconds) {
+      currentTimer?.cancel();
+      checkInterval = intervalSeconds;
+      currentTimer = Timer.periodic(Duration(seconds: intervalSeconds), (timer) async {
+        // 매번 최신 설정 로드 (사용자가 설정을 변경했을 수 있음)
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.reload();
+        final currentInterval = prefs.getInt('checkIntervalSeconds') ?? 30;
+        if (currentInterval != checkInterval) {
+          // 주기가 변경되면 타이머 재시작
+          startTimer(currentInterval);
+          return;
+        }
 
-      service.invoke('update', {
-        "current_date": DateTime.now().toIso8601String(),
+        await _checkBroadcasts(apiService);
+
+        service.invoke('update', {
+          "current_date": DateTime.now().toIso8601String(),
+        });
       });
-    });
+    }
+
+    // 서비스 시작 시 타이머 시작
+    startTimer(checkInterval);
   }
 
   static Future<void> _checkBroadcasts(ApiService apiService) async {
