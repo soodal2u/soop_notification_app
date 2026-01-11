@@ -1,0 +1,63 @@
+name: Auto Release APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.1.4")
+          echo "previous_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+
+      - name: Increment version
+        id: next_version
+        run: |
+          PREV_TAG=${{ steps.get_tag.outputs.previous_tag }}
+          BASE_VERSION=${PREV_TAG#v}
+          IFS='.' read -r major minor patch <<< "$BASE_VERSION"
+          NEXT_PATCH=$((patch + 1))
+          NEXT_TAG="v$major.$minor.$NEXT_PATCH"
+          echo "new_tag=$NEXT_TAG" >> $GITHUB_OUTPUT
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.x'
+          channel: 'stable'
+
+      - name: Build APK
+        run: |
+          flutter pub get
+          flutter build apk --release
+
+      - name: Create Release and Upload APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.next_version.outputs.new_tag }}
+          name: Release ${{ steps.next_version.outputs.new_tag }}
+          draft: false
+          prerelease: false
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
