@@ -47,20 +47,25 @@ class BackgroundService {
 
     final apiService = ApiService();
 
-    // 설정에서 체크 주기 가져오기
-    final prefs = await SharedPreferences.getInstance();
-    int checkInterval = prefs.getInt('checkIntervalSeconds') ?? 30;
+    // 초기 체크 주기 설정
+    int checkInterval = 30;
+
+    // 최초 실행 시 설정 로드
+    final initialPrefs = await SharedPreferences.getInstance();
+    checkInterval = initialPrefs.getInt('checkIntervalSeconds') ?? 30;
 
     // 설정 변경 감지를 위한 타이머
     Timer.periodic(Duration(seconds: checkInterval), (timer) async {
-      // 최신 설정 다시 로드 (사용자가 설정을 변경했을 수 있음)
+      // 매번 최신 설정 로드 (사용자가 설정을 변경했을 수 있음)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
       final currentInterval = prefs.getInt('checkIntervalSeconds') ?? 30;
       if (currentInterval != checkInterval) {
         // 주기가 변경되면 타이머 재시작 필요 (서비스 재시작으로 처리)
         checkInterval = currentInterval;
       }
 
-      await _checkBroadcasts(apiService, prefs);
+      await _checkBroadcasts(apiService);
 
       service.invoke('update', {
         "current_date": DateTime.now().toIso8601String(),
@@ -68,10 +73,11 @@ class BackgroundService {
     });
   }
 
-  static Future<void> _checkBroadcasts(
-    ApiService apiService,
-    SharedPreferences prefs,
-  ) async {
+  static Future<void> _checkBroadcasts(ApiService apiService) async {
+    // 항상 최신 SharedPreferences 데이터 로드
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.reload(); // 다른 isolate에서 변경된 데이터 동기화
+
     // 방해 금지 시간대 체크
     final settings = await AppSettings.load();
     if (settings.isInDndTime()) {
