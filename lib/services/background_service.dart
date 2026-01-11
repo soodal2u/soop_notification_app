@@ -17,7 +17,7 @@ class BackgroundService {
     await service.configure(
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
-        autoStart: false,
+        autoStart: true,
         isForegroundMode: true,
         notificationChannelId: 'soop_foreground_service',
         initialNotificationTitle: 'SOOP 알리미 서비스',
