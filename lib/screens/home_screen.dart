@@ -92,6 +92,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _toggleService(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('is_service_enabled', value);
+
     final service = FlutterBackgroundService();
     if (value) {
       await service.startService();

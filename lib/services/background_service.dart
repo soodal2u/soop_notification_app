@@ -13,10 +13,13 @@ class BackgroundService {
   static Future<void> initializeService() async {
     final service = FlutterBackgroundService();
 
+    final prefs = await SharedPreferences.getInstance();
+    final isEnabled = prefs.getBool('is_service_enabled') ?? false;
+
     await service.configure(
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
-        autoStart: false,
+        autoStart: isEnabled,
         isForegroundMode: true,
         notificationChannelId: 'soop_foreground_service',
         initialNotificationTitle: 'SOOP 알리미 서비스',
@@ -24,7 +27,7 @@ class BackgroundService {
         foregroundServiceNotificationId: 888,
       ),
       iosConfiguration: IosConfiguration(
-        autoStart: false,
+        autoStart: isEnabled,
         onForeground: onStart,
         onBackground: onIosBackground,
       ),
