@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'  # v1.0.0, v1.1.5 등 태그 푸시 시 실행
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: Build & Release APK
