@@ -23,7 +23,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.10.4' # pubspec.yaml에 명시된 버전과 맞춤 (또는 latest)
           channel: 'stable'
 
       - name: Install dependencies
